@@ -602,36 +602,43 @@ function DistributionLayer(){
       {/* Deposit modal */}
       {depositTarget&&(
         <div style={{position:"fixed",inset:0,background:"rgba(7,9,14,0.88)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20}}>
-          <div style={{background:"#0F1520",border:`1px solid ${depositTarget.color}30`,borderRadius:16,padding:26,width:"100%",maxWidth:460,boxShadow:`0 0 60px ${depositTarget.color}18`}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+          <div style={{background:"#0F1520",border:`1px solid ${depositTarget.color}30`,borderRadius:16,width:"100%",maxWidth:460,boxShadow:`0 0 60px ${depositTarget.color}18`,maxHeight:"90vh",overflowY:"auto",display:"flex",flexDirection:"column"}}>
+            {/* Fixed header */}
+            <div style={{padding:"20px 22px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
               <div style={{width:36,height:36,background:`${depositTarget.color}20`,border:`1px solid ${depositTarget.color}35`,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:F.display,fontWeight:800,fontSize:12,color:depositTarget.color}}>{depositTarget.logo}</div>
               <div>
                 <div style={{fontFamily:F.display,fontWeight:800,fontSize:15,color:"#EDF2F7"}}>{depositTarget.name}</div>
                 <div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99"}}>{depositTarget.apy}% APY · {depositTarget.risk} risk</div>
               </div>
-              <button onClick={()=>setDT(null)} style={{marginLeft:"auto",background:"none",border:"none",color:"#6B7A99",fontSize:18,cursor:"pointer"}}>×</button>
+              <button onClick={()=>setDT(null)} style={{marginLeft:"auto",background:"none",border:"none",color:"#6B7A99",fontSize:20,cursor:"pointer",lineHeight:1}}>×</button>
             </div>
-            {depositTarget.isNative&&(
-              <div style={{background:"rgba(58,191,122,0.11)",border:"1px solid rgba(58,191,122,0.25)",borderRadius:8,padding:"10px 13px",marginBottom:12}}>
-                {jKey==="SG"
-                  ?<><div style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"#3ABF7A",marginBottom:3}}>🇸🇬 SINGAPORE SCS — ISSUER-DIRECT MODEL</div><div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>ClearYield is the MPI-licensed issuer of CY-USD. Under MAS SCS, ClearYield as issuer distributes T-bill reserve yield directly to holders — no third-party wrapper required. This is the product Circle and Tether legally cannot offer from their US or EU domiciles. You are buying ClearYield's own stablecoin, backed 1:1 by T-bills.</div></>
-                  :<><div style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"#3ABF7A",marginBottom:3}}>🌐 THIRD-PARTY WRAPPER MODEL</div><div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>For US, EU, and HK users, CY-USD operates as a wrapper. You hold USDC — ClearYield holds it as a licensed third-party intermediary, deploys into T-bills, and distributes yield to you. The stablecoin issuer (Circle) never pays yield. ClearYield does — as the licensed intermediary permitted under CLARITY s.3(11) / MiCA CASP / HKMA Stablecoins Ordinance. Note: HKMA does not contain an explicit issuer-direct provision equivalent to MAS PSN08.</div></>
-                }
+
+            {/* Scrollable body */}
+            <div style={{padding:"16px 22px",flex:1,overflowY:"auto"}}>
+              {depositTarget.isNative&&(
+                <div style={{background:"rgba(58,191,122,0.11)",border:"1px solid rgba(58,191,122,0.25)",borderRadius:8,padding:"10px 13px",marginBottom:12}}>
+                  {jKey==="SG"
+                    ?<><div style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"#3ABF7A",marginBottom:3}}>🇸🇬 SINGAPORE SCS — ISSUER-DIRECT</div><div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>ClearYield is the MPI-licensed issuer of CY-USD — distributing T-bill reserve yield directly under MAS SCS. No third-party wrapper required. This is the product Circle cannot legally offer from a US or EU domicile.</div></>
+                    :<><div style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"#3ABF7A",marginBottom:3}}>🌐 THIRD-PARTY WRAPPER</div><div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>ClearYield holds your USDC as a licensed intermediary, deploys into T-bills, and distributes yield. Circle never pays yield — ClearYield does, under CLARITY s.3(11) / MiCA CASP / HKMA Ordinance.</div></>
+                  }
+                </div>
+              )}
+              <div style={{background:"rgba(74,142,219,0.11)",border:"1px solid rgba(74,142,219,0.25)",borderRadius:8,padding:"10px 13px",marginBottom:16}}>
+                <div style={{fontFamily:F.mono,fontSize:10,color:"#4A8EDB",fontWeight:700,marginBottom:3}}>DISCLOSURE</div>
+                <div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>Yield is variable and not guaranteed. This is not a bank deposit. Simulated demo only.</div>
               </div>
-            )}
-            <div style={{background:"rgba(74,142,219,0.11)",border:"1px solid rgba(74,142,219,0.25)",borderRadius:8,padding:"10px 13px",marginBottom:18}}>
-              <div style={{fontFamily:F.mono,fontSize:10,color:"#4A8EDB",fontWeight:700,marginBottom:3}}>DISCLOSURE</div>
-              <div style={{fontFamily:F.mono,fontSize:11,color:"#6B7A99",lineHeight:1.6}}>Yield is variable and not guaranteed. This is not a bank deposit. Simulated demo only.</div>
-            </div>
-            <div style={{marginBottom:16}}>
-              <div style={{fontFamily:F.mono,fontSize:10,color:"#6B7A99",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:6}}>Amount (Balance: ${balance.toFixed(2)})</div>
-              <input type="number" value={depAmt} onChange={e=>setDepAmt(e.target.value)} placeholder="e.g. 5000" style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:8,padding:"9px 13px",color:"#EDF2F7",fontFamily:F.mono,fontSize:13,outline:"none"}}/>
-              <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
-                {[500,1000,2500,5000].filter(v=>v<=balance).map(v=><Btn key={v} sm variant="subtle" onClick={()=>setDepAmt(String(v))}>${v.toLocaleString()}</Btn>)}
+              <div style={{marginBottom:16}}>
+                <div style={{fontFamily:F.mono,fontSize:10,color:"#6B7A99",textTransform:"uppercase",letterSpacing:"0.09em",marginBottom:6}}>Amount (Balance: ${balance.toFixed(2)})</div>
+                <input type="number" value={depAmt} onChange={e=>setDepAmt(e.target.value)} placeholder="e.g. 5000" style={{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.13)",borderRadius:8,padding:"9px 13px",color:"#EDF2F7",fontFamily:F.mono,fontSize:13,outline:"none"}}/>
+                <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
+                  {[500,1000,2500,5000].filter(v=>v<=balance).map(v=><Btn key={v} sm variant="subtle" onClick={()=>setDepAmt(String(v))}>${v.toLocaleString()}</Btn>)}
+                </div>
+                {depAmt&&parseFloat(depAmt)>0&&<div style={{fontFamily:F.mono,fontSize:11,color:"#3ABF7A",marginTop:8}}>Est. monthly: +${(parseFloat(depAmt)*depositTarget.apy/100/12).toFixed(2)}</div>}
               </div>
-              {depAmt&&parseFloat(depAmt)>0&&<div style={{fontFamily:F.mono,fontSize:11,color:"#3ABF7A",marginTop:8}}>Est. monthly: +${(parseFloat(depAmt)*depositTarget.apy/100/12).toFixed(2)}</div>}
             </div>
-            <div style={{display:"flex",gap:9}}>
+
+            {/* Fixed footer buttons */}
+            <div style={{padding:"14px 22px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",gap:9,flexShrink:0}}>
               <Btn variant="ghost" onClick={()=>setDT(null)} full>Cancel</Btn>
               <Btn disabled={!depAmt||parseFloat(depAmt)<=0||parseFloat(depAmt)>balance} onClick={()=>deposit(depositTarget,parseFloat(depAmt))} full>Confirm Deposit →</Btn>
             </div>
