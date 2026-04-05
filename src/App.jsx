@@ -72,6 +72,24 @@ const C = {
   red:"#E05252", redDim:"rgba(224,82,82,0.10)",
   blue:"#4A8EDB", blueDim:"rgba(74,142,219,0.11)",
 };
+
+// ─── DEPLOYED CONTRACTS (Sepolia Testnet) ────────────────────────────────────
+const CONTRACTS = {
+  network:      "Sepolia Testnet",
+  chainId:      11155111,
+  vault: {
+    name:       "ClearYieldVault",
+    address:    "0x67aE95822353d27dec45f541dDD5E1a77d2d870d",
+    etherscan:  "https://sepolia.etherscan.io/address/0x67aE95822353d27dec45f541dDD5E1a77d2d870d",
+  },
+  mockUsdc: {
+    name:       "MockUSDC",
+    address:    "0xEBFA7207552F116Fa04793e80A0d03c4740C6341",
+    etherscan:  "https://sepolia.etherscan.io/address/0xEBFA7207552F116Fa04793e80A0d03c4740C6341",
+  },
+  owner:        "0x7a9deCCF72311d4De7A79F33f459C028eCCD6a0d",
+};
+
 const F = { display:"'Syne',sans-serif", mono:"'JetBrains Mono',monospace" };
 
 const YIELD_SOURCES = [
@@ -281,6 +299,33 @@ function StatsBar({ tvl, users, yieldPaid }) {
           <span style={{fontFamily:F.mono,fontSize:12,fontWeight:700,color:s.col}}>{s.val}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+
+// ─── CONTRACT BADGE ───────────────────────────────────────────────────────────
+function ContractBadge() {
+  return(
+    <div style={{background:"rgba(74,142,219,0.08)",border:"1px solid rgba(74,142,219,0.25)",borderRadius:10,padding:"12px 18px",marginBottom:20,display:"flex",gap:16,alignItems:"flex-start",flexWrap:"wrap"}}>
+      <div style={{flexShrink:0}}>
+        <div style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,letterSpacing:"0.08em",marginBottom:5}}>⛓ DEPLOYED ON-CHAIN · SEPOLIA TESTNET</div>
+        <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginBottom:3}}>This is a real smart contract deployed on the Ethereum Sepolia testnet — not a simulation.</div>
+        <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99"}}>On mainnet: ClearYield would deploy on Ethereum mainnet with real USDC and MAS-regulated custody.</div>
+      </div>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginLeft:"auto"}}>
+        {[
+          {label:"ClearYieldVault", addr:CONTRACTS.vault.address, url:CONTRACTS.vault.etherscan, col:"#C8A84B"},
+          {label:"MockUSDC (testnet)", addr:CONTRACTS.mockUsdc.address, url:CONTRACTS.mockUsdc.etherscan, col:"#4A8EDB"},
+        ].map(ct=>(
+          <a key={ct.label} href={ct.url} target="_blank" rel="noopener noreferrer"
+            style={{background:"rgba(255,255,255,0.04)",border:`1px solid ${ct.col}30`,borderRadius:8,padding:"8px 12px",textDecoration:"none",display:"flex",flexDirection:"column",gap:3,minWidth:220}}>
+            <div style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:ct.col,letterSpacing:"0.06em"}}>{ct.label}</div>
+            <div style={{fontFamily:F.mono,fontSize:10,color:"#EDF2F7"}}>{ct.addr.slice(0,10)}...{ct.addr.slice(-8)}</div>
+            <div style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB"}}>View on Etherscan ↗</div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
@@ -616,6 +661,7 @@ function DistributionLayer({tbill}){
             <h1 style={{fontFamily:F.display,fontSize:26,fontWeight:800,color:"#EDF2F7",margin:"0 0 8px",letterSpacing:"-0.02em"}}>Who Receives Yield</h1>
             <p style={{fontFamily:F.mono,fontSize:12,color:"#6B7A99",lineHeight:1.7,maxWidth:700}}>ClearYield as the licensed intermediary distributes yield to end users. Jurisdiction enforcement is automatic — vaults non-compliant in your jurisdiction are blocked or flagged in real time.</p>
           </div>
+          <ContractBadge/>
 
           {balance===0&&!showAdd&&(
             <div style={{background:"rgba(200,168,75,0.13)",border:"1px solid rgba(200,168,75,0.30)",borderRadius:10,padding:"12px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:14}}>
@@ -887,6 +933,7 @@ function ComparisonLayer({tbill}){
           Every other product solves one part of the problem. ClearYield solves all of it. Hover any cell for details.
         </p>
       </div>
+      <ContractBadge/>
 
       {/* Comparison table */}
       <div style={{overflowX:"auto"}}>
