@@ -90,6 +90,42 @@ const JURISDICTIONS = [
   { key:"OTHER", flag:"🌐", label:"Other / Unrestricted",  law:null,                       cKey:null,      block:false, warn:false },
 ];
 
+// ─── COMPARISON DATA ─────────────────────────────────────────────────────────
+const COMPARISON = {
+  dimensions:[
+    {id:"clarity",    label:"US CLARITY Compliant",     desc:"Accessible to US retail users"},
+    {id:"mica",       label:"EU MiCA Compliant",         desc:"Accessible to EU retail users"},
+    {id:"mas",        label:"SG MAS Compliant",          desc:"Accessible to Singapore users"},
+    {id:"hkma",       label:"HK HKMA Compliant",         desc:"Accessible to HK users"},
+    {id:"licensed",   label:"Licensed Legal Entity",     desc:"Named, regulated, auditable counterparty"},
+    {id:"institutional",label:"Institutional Access",   desc:"Can be onboarded by regulated institutions"},
+    {id:"usretail",   label:"US Retail Access",          desc:"Available to ordinary US retail investors"},
+    {id:"stable",     label:"Stable Yield Source",       desc:"Yield cannot go negative"},
+    {id:"howey",      label:"Howey Risk Low",            desc:"Strong argument against securities classification"},
+  ],
+  products:[
+    { name:"CY-USD", sub:"ClearYield (SG)", color:"#C8A84B",
+      scores:{clarity:"warn",mica:"warn",mas:"pass",hkma:"warn",licensed:"pass",institutional:"pass",usretail:"warn",stable:"pass",howey:"pass"},
+      notes:{clarity:"SG only — US users use CY-USDC",mica:"SG only — EU users use CY-USDC",mas:"★ Issuer-direct under MAS SCS",hkma:"Via CY-USDC wrapper",licensed:"MAS MPI Licensed",institutional:"MAS-regulated counterparty",usretail:"Via CY-USDC (4.6%)",stable:"T-bills — never gone negative",howey:"Variable rate, payment function primary"} },
+    { name:"CY-USDC", sub:"ClearYield (All)", color:"#7EB8C8",
+      scores:{clarity:"pass",mica:"pass",mas:"pass",hkma:"pass",licensed:"pass",institutional:"pass",usretail:"pass",stable:"pass",howey:"pass"},
+      notes:{clarity:"CLARITY s.3(11) third-party separation",mica:"MiCA CASP route",mas:"MAS SCS compliant wrapper",hkma:"HKMA licensed intermediary",licensed:"MAS MPI Licensed",institutional:"MAS-regulated counterparty",usretail:"✓ Accessible to US retail",stable:"T-bills — never gone negative",howey:"Wrapper structure, service provider framing"} },
+    { name:"sDAI", sub:"MakerDAO", color:"#F4B731",
+      scores:{clarity:"pass",mica:"pass",mas:"pass",hkma:"pass",licensed:"fail",institutional:"fail",usretail:"pass",stable:"pass",howey:"pass"},
+      notes:{clarity:"Grey zone — tolerated not blessed",mica:"Out of MiCA scope (Recital 22)",mas:"Project Guardian supports it",hkma:"Smart contract governance",licensed:"No legal entity — DAO",institutional:"Cannot onboard as counterparty",usretail:"Accessible but requires DeFi literacy",stable:"T-bills + protocol fees",howey:"Strongest DeFi defence — decentralised governance"} },
+    { name:"USDY", sub:"Ondo Finance", color:"#7EBEF7",
+      scores:{clarity:"fail",mica:"warn",mas:"pass",hkma:"pass",licensed:"pass",institutional:"pass",usretail:"fail",stable:"pass",howey:"fail"},
+      notes:{clarity:"Blocked by Reg S — not CLARITY Act",mica:"MiFID II security — separate authorisation needed",mas:"Eligible via MAS-licensed entities",hkma:"Compliant via licensed third party",licensed:"Ondo Finance — regulated",institutional:"Accredited investors only",usretail:"Blocked by Regulation S",stable:"T-bills — stable",howey:"All 4 prongs satisfied — IS a security (Reg S)"} },
+    { name:"sUSDe", sub:"Ethena Labs", color:"#00D4AA",
+      scores:{clarity:"warn",mica:"pass",mas:"warn",hkma:"pass",licensed:"fail",institutional:"fail",usretail:"warn",stable:"fail",howey:"fail"},
+      notes:{clarity:"Anchorage wrapper (Nov 2025) — CEX nexus risk",mica:"BVI domicile, CASP distribution",mas:"Requires MAS CIS licence for retail",hkma:"Via licensed third party",licensed:"No MAS licence — BVI entity",institutional:"Cannot onboard directly",usretail:"CEX access only — regulatory risk",stable:"Funding rates can go negative",howey:"All 4 prongs satisfied — 'Internet Bond' label"} },
+    { name:"Aave/DeFi", sub:"Permissionless", color:"#B6509E",
+      scores:{clarity:"warn",mica:"warn",mas:"warn",hkma:"warn",licensed:"fail",institutional:"fail",usretail:"pass",stable:"warn",howey:"warn"},
+      notes:{clarity:"No licensed entity — grey zone",mica:"Out of MiCA scope — no CASP",mas:"No MAS licence",hkma:"No HKMA licence",licensed:"No legal entity — smart contract only",institutional:"Cannot onboard as counterparty",usretail:"Accessible but no regulatory protection",stable:"Variable lending rates — can drop sharply",howey:"Governance token complicates analysis"} },
+  ],
+};
+
+
 function getAccess(vault,jKey){
   if(!jKey||jKey==="OTHER") return {blocked:false,warned:false};
   // CY-USD (issuer-direct) is only available to SG users
@@ -208,7 +244,7 @@ function Nav({layer,setLayer,onHome}){
         </div>
         {/* Step pills */}
         <div style={{display:"flex",gap:5,marginLeft:16}}>
-          {[{k:"issuance",n:"01",l:"Issuance"},{k:"compliance",n:"02",l:"Compliance"},{k:"distribution",n:"03",l:"Distribution"}].map(s=>(
+          {[{k:"issuance",n:"01",l:"Issuance"},{k:"compliance",n:"02",l:"Compliance"},{k:"distribution",n:"03",l:"Distribution"},{k:"comparison",n:"04",l:"Compare"}].map(s=>(
             <button key={s.k} onClick={()=>setLayer(s.k)} style={{background:layer===s.k?"rgba(200,168,75,0.13)":"transparent",border:`1px solid ${layer===s.k?"rgba(200,168,75,0.50)":"rgba(255,255,255,0.07)"}`,borderRadius:7,padding:"4px 11px",cursor:"pointer",transition:"all 0.15s"}}>
               <div style={{fontFamily:F.mono,fontSize:8,color:layer===s.k?"#C8A84B":"#252D42bb",letterSpacing:"0.08em"}}>{s.n}</div>
               <div style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:layer===s.k?"#C8A84B":"#6B7A99"}}>{s.l}</div>
@@ -700,6 +736,104 @@ function JurisdictionGate({onSelect}){
   );
 }
 
+// ─── LAYER 4: COMPARISON ─────────────────────────────────────────────────────
+function ComparisonLayer(){
+  const scoreIcon=(s)=>{
+    if(s==="pass") return {icon:"✓",col:"#3ABF7A",bg:"rgba(58,191,122,0.11)"};
+    if(s==="warn") return {icon:"◐",col:"#D4913A",bg:"rgba(212,145,58,0.12)"};
+    return {icon:"✕",col:"#E05252",bg:"rgba(224,82,82,0.10)"};
+  };
+  const [hovered,setHovered]=useState(null); // {row,col}
+
+  return(
+    <div style={{padding:"32px 28px",maxWidth:1200,margin:"0 auto"}}>
+      <div style={{marginBottom:22}}>
+        <div style={{fontFamily:F.mono,fontSize:10,color:"#C8A84B",letterSpacing:"0.12em",marginBottom:8}}>LAYER 04 — COMPARISON</div>
+        <h1 style={{fontFamily:F.display,fontSize:28,fontWeight:800,color:"#EDF2F7",margin:"0 0 10px",letterSpacing:"-0.02em"}}>ClearYield vs The Market</h1>
+        <p style={{fontFamily:F.mono,fontSize:12,color:"#6B7A99",lineHeight:1.8,maxWidth:700}}>
+          Every other product solves one part of the problem. ClearYield solves all of it. Hover any cell for details.
+        </p>
+      </div>
+
+      {/* Comparison table */}
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"separate",borderSpacing:0}}>
+          <thead>
+            <tr>
+              <th style={{background:"#0F1520",padding:"10px 14px",textAlign:"left",fontFamily:F.mono,fontSize:10,color:"#6B7A99",fontWeight:600,letterSpacing:"0.08em",borderBottom:"1px solid rgba(255,255,255,0.07)",width:200}}>DIMENSION</th>
+              {COMPARISON.products.map((p,i)=>(
+                <th key={i} style={{background:p.name.includes("CY")?"rgba(200,168,75,0.08)":"#0F1520",padding:"10px 14px",textAlign:"center",borderBottom:"1px solid rgba(255,255,255,0.07)",borderLeft:"1px solid rgba(255,255,255,0.05)",minWidth:110}}>
+                  <div style={{fontFamily:F.display,fontSize:12,fontWeight:800,color:p.color}}>{p.name}</div>
+                  <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginTop:2}}>{p.sub}</div>
+                  {p.name.includes("CY")&&<div style={{fontFamily:F.mono,fontSize:8,color:"#C8A84B",marginTop:3,letterSpacing:"0.04em"}}>★ CLEARYIELD</div>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {COMPARISON.dimensions.map((dim,ri)=>(
+              <tr key={dim.id} style={{background:ri%2===0?"rgba(255,255,255,0.015)":"transparent"}}>
+                <td style={{padding:"9px 14px",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:"#EDF2F7"}}>{dim.label}</div>
+                  <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginTop:2}}>{dim.desc}</div>
+                </td>
+                {COMPARISON.products.map((p,ci)=>{
+                  const s=p.scores[dim.id];
+                  const {icon,col,bg}=scoreIcon(s);
+                  const isHov=hovered&&hovered.r===ri&&hovered.c===ci;
+                  return(
+                    <td key={ci}
+                      onMouseEnter={()=>setHovered({r:ri,c:ci})}
+                      onMouseLeave={()=>setHovered(null)}
+                      style={{padding:"9px 10px",borderBottom:"1px solid rgba(255,255,255,0.04)",borderLeft:"1px solid rgba(255,255,255,0.05)",textAlign:"center",background:p.name.includes("CY")?"rgba(200,168,75,0.04)":"transparent",position:"relative",cursor:"pointer",transition:"background 0.1s"}}>
+                      <div style={{width:28,height:28,background:bg,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto",fontFamily:F.mono,fontSize:14,fontWeight:800,color:col}}>{icon}</div>
+                      {isHov&&(
+                        <div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",background:"#161B28",border:`1px solid ${col}50`,borderRadius:9,padding:"10px 13px",zIndex:50,minWidth:200,maxWidth:240,textAlign:"left",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+                          <div style={{fontFamily:F.mono,fontSize:9,fontWeight:700,color:col,marginBottom:5,letterSpacing:"0.06em"}}>{p.name} — {dim.label}</div>
+                          <div style={{fontFamily:F.mono,fontSize:10,color:"#8899AA",lineHeight:1.6}}>{p.notes[dim.id]}</div>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Legend */}
+      <div style={{display:"flex",gap:16,marginTop:18,flexWrap:"wrap"}}>
+        {[{icon:"✓",col:"#3ABF7A",bg:"rgba(58,191,122,0.11)",label:"Compliant / Available"},{icon:"◐",col:"#D4913A",bg:"rgba(212,145,58,0.12)",label:"Partial / Caution"},{icon:"✕",col:"#E05252",bg:"rgba(224,82,82,0.10)",label:"Blocked / Not available"}].map(l=>(
+          <div key={l.label} style={{display:"flex",alignItems:"center",gap:7}}>
+            <div style={{width:22,height:22,background:l.bg,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:F.mono,fontSize:12,fontWeight:800,color:l.col}}>{l.icon}</div>
+            <span style={{fontFamily:F.mono,fontSize:10,color:"#6B7A99"}}>{l.label}</span>
+          </div>
+        ))}
+        <div style={{marginLeft:"auto",fontFamily:F.mono,fontSize:10,color:"#6B7A99",fontStyle:"italic"}}>Hover any cell for details</div>
+      </div>
+
+      {/* Key insight */}
+      <div style={{background:"rgba(200,168,75,0.13)",border:"1px solid rgba(200,168,75,0.30)",borderRadius:12,padding:"16px 20px",marginTop:20}}>
+        <div style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:"#C8A84B",marginBottom:8}}>WHY CLEARYIELD</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+          {[
+            {t:"Only all-jurisdiction product",b:"CY-USDC is the only product that passes CLARITY, MiCA, MAS, and HKMA simultaneously. No other product in the market achieves this."},
+            {t:"Only licensed institutional gateway",b:"sDAI and Aave have no legal entity. Regulated institutions cannot onboard them. ClearYield is the only MAS-licensed entity in this comparison."},
+            {t:"Only product with stable yield + US retail access",b:"USDY is blocked for US retail. sUSDe yield can go negative. ClearYield gives US retail stable T-bill yield through CLARITY-compliant third-party separation."},
+          ].map(i=>(
+            <div key={i.t}>
+              <div style={{fontFamily:F.mono,fontSize:11,fontWeight:700,color:"#EDF2F7",marginBottom:5}}>{i.t}</div>
+              <div style={{fontFamily:F.mono,fontSize:10,color:"#6B7A99",lineHeight:1.6}}>{i.b}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function ClearYield(){
   const [screen,setScreen]=useState("intro");
@@ -708,6 +842,7 @@ export default function ClearYield(){
   function goNext(){
     if(layer==="issuance") setLayer("compliance");
     else if(layer==="compliance") setLayer("distribution");
+    else if(layer==="distribution") setLayer("comparison");
   }
 
   return(
@@ -731,9 +866,11 @@ export default function ClearYield(){
             {layer==="issuance"    &&<IssuanceLayer    onNext={goNext}/>}
             {layer==="compliance"  &&<ComplianceLayer  onNext={goNext}/>}
             {layer==="distribution"&&<DistributionLayer/>}
+            {layer==="comparison"  &&<ComparisonLayer/>}
           </>
         )}
       </div>
     </div>
   );
 }
+
