@@ -616,7 +616,7 @@ function DistributionLayer({tbill}){
   const [addBal,setAddBal]  =useState("");
   const [toast,setToast]    =useState(null);
 
-  function fire(msg){setToast(msg);setTimeout(()=>setToast(null),3000);}
+  function fire(msg,txUrl){setToast({msg,txUrl});setTimeout(()=>setToast(null),6000);}
   if(!jKey) return <JurisdictionGate onSelect={setJKey}/>;
 
   const jConfig=JURISDICTIONS.find(j=>j.key===jKey);
@@ -628,12 +628,28 @@ function DistributionLayer({tbill}){
     setBalance(b=>b-amt);
     setPos(p=>[...p,{id:`${vault.id}-${Date.now()}`,vaultId:vault.id,name:vault.name,color:vault.color,logo:vault.logo,apy:vault.apy,amt,depositedOn:new Date().toLocaleDateString("en-SG"),isNative:vault.isNative}]);
     setDT(null);setDepAmt("");setView("portfolio");
-    fire(`Deposited $${amt.toLocaleString()} into ${vault.name}`);
+    fire(`Deposited $${amt.toLocaleString()} into ${vault.name}`, CONTRACTS.vault.etherscan);
   }
 
   return(
     <div>
-      {toast&&<div style={{position:"fixed",bottom:24,right:24,zIndex:999,background:"#0F1520",border:"1px solid rgba(58,191,122,0.40)",borderRadius:12,padding:"12px 18px",fontFamily:F.mono,fontSize:13,fontWeight:700,color:"#3ABF7A",boxShadow:"0 16px 48px rgba(0,0,0,0.5)"}}>{toast}</div>}
+      {toast&&(
+        <div style={{position:"fixed",bottom:24,right:24,zIndex:999,background:"#0F1520",border:"1px solid rgba(58,191,122,0.40)",borderRadius:12,padding:"14px 18px",boxShadow:"0 16px 48px rgba(0,0,0,0.5)",maxWidth:340}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:toast.txUrl?8:0}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:"#3ABF7A",flexShrink:0}}/>
+            <div style={{fontFamily:F.mono,fontSize:13,fontWeight:700,color:"#3ABF7A"}}>{toast.msg}</div>
+          </div>
+          {toast.txUrl&&(
+            <div style={{paddingLeft:16}}>
+              <div style={{fontFamily:F.mono,fontSize:10,color:"#6B7A99",marginBottom:6}}>Architecture deployed on Sepolia testnet. In production this triggers a real on-chain transaction.</div>
+              <a href={toast.txUrl} target="_blank" rel="noopener noreferrer"
+                style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(74,142,219,0.12)",border:"1px solid rgba(74,142,219,0.30)",borderRadius:6,padding:"5px 10px",textDecoration:"none"}}>
+                <span style={{fontFamily:F.mono,fontSize:10,fontWeight:700,color:"#4A8EDB"}}>⛓ View ClearYieldVault on Etherscan ↗</span>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Subbar */}
       <div style={{borderBottom:"1px solid rgba(255,255,255,0.07)",padding:"0 28px",display:"flex",alignItems:"center",background:"#0D1117",height:44,gap:0}}>
@@ -827,7 +843,7 @@ function DistributionLayer({tbill}){
                     <div style={{fontFamily:F.display,fontWeight:800,fontSize:18,color:"#EDF2F7"}}>${p.amt.toLocaleString()}</div>
                     <div style={{fontFamily:F.mono,fontSize:10,color:"#3ABF7A"}}>+${(p.amt*p.apy/100/12).toFixed(2)}/mo est.</div>
                   </div>
-                  <Btn sm variant="success" onClick={()=>{setBalance(b=>b+p.amt);setPos(ps=>ps.map(x=>x.id===p.id?{...x,redeemed:true}:x));fire(`Redeemed $${p.amt.toLocaleString()} from ${p.name}`);}}>Redeem</Btn>
+                  <Btn sm variant="success" onClick={()=>{setBalance(b=>b+p.amt);setPos(ps=>ps.map(x=>x.id===p.id?{...x,redeemed:true}:x));fire(`Redeemed $${p.amt.toLocaleString()} from ${p.name}`,null);}}>Redeem</Btn>
                 </div>
               ))}
             </>
@@ -874,6 +890,11 @@ function DistributionLayer({tbill}){
             </div>
 
             {/* Fixed footer buttons */}
+            <div style={{padding:"10px 22px",background:"rgba(74,142,219,0.06)",borderTop:"1px solid rgba(74,142,219,0.15)"}}>
+              <div style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,marginBottom:3}}>⛓ ON-CHAIN ARCHITECTURE · SEPOLIA TESTNET</div>
+              <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginBottom:4}}>In production this deposit triggers a real on-chain transaction via the ClearYieldVault smart contract.</div>
+              <a href={CONTRACTS.vault.etherscan} target="_blank" rel="noopener noreferrer" style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,textDecoration:"none"}}>View ClearYieldVault on Etherscan ↗</a>
+            </div>
             <div style={{padding:"14px 22px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",gap:9,flexShrink:0}}>
               <Btn variant="ghost" onClick={()=>setDT(null)} full>Cancel</Btn>
               <Btn disabled={!depAmt||parseFloat(depAmt)<=0||parseFloat(depAmt)>balance} onClick={()=>deposit(depositTarget,parseFloat(depAmt))} full>Confirm Deposit →</Btn>
