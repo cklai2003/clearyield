@@ -77,13 +77,18 @@ const C = {
 const CONTRACTS = {
   network:      "Sepolia Testnet",
   chainId:      11155111,
+  cyusd: {
+    name:       "CYUSDToken (CY-USD)",
+    address:    "0xDAa98a0D8F74ddc831B73d5dAC4bcF381D61A363",
+    etherscan:  "https://sepolia.etherscan.io/address/0xDAa98a0D8F74ddc831B73d5dAC4bcF381D61A363",
+  },
   vault: {
-    name:       "ClearYieldVault",
+    name:       "ClearYieldVault (CY-USDC)",
     address:    "0x67aE95822353d27dec45f541dDD5E1a77d2d870d",
     etherscan:  "https://sepolia.etherscan.io/address/0x67aE95822353d27dec45f541dDD5E1a77d2d870d",
   },
   mockUsdc: {
-    name:       "MockUSDC",
+    name:       "MockUSDC (testnet only)",
     address:    "0xEBFA7207552F116Fa04793e80A0d03c4740C6341",
     etherscan:  "https://sepolia.etherscan.io/address/0xEBFA7207552F116Fa04793e80A0d03c4740C6341",
   },
@@ -315,7 +320,8 @@ function ContractBadge() {
       </div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginLeft:"auto"}}>
         {[
-          {label:"ClearYieldVault", addr:CONTRACTS.vault.address, url:CONTRACTS.vault.etherscan, col:"#C8A84B"},
+          {label:"CYUSDToken (CY-USD)", addr:CONTRACTS.cyusd.address, url:CONTRACTS.cyusd.etherscan, col:"#C8A84B"},
+          {label:"ClearYieldVault (CY-USDC)", addr:CONTRACTS.vault.address, url:CONTRACTS.vault.etherscan, col:"#7EB8C8"},
           {label:"MockUSDC (testnet)", addr:CONTRACTS.mockUsdc.address, url:CONTRACTS.mockUsdc.etherscan, col:"#4A8EDB"},
         ].map(ct=>(
           <a key={ct.label} href={ct.url} target="_blank" rel="noopener noreferrer"
@@ -628,7 +634,7 @@ function DistributionLayer({tbill}){
     setBalance(b=>b-amt);
     setPos(p=>[...p,{id:`${vault.id}-${Date.now()}`,vaultId:vault.id,name:vault.name,color:vault.color,logo:vault.logo,apy:vault.apy,amt,depositedOn:new Date().toLocaleDateString("en-SG"),isNative:vault.isNative}]);
     setDT(null);setDepAmt("");setView("portfolio");
-    fire(`Deposited $${amt.toLocaleString()} into ${vault.name}`, CONTRACTS.vault.etherscan);
+    fire(`Deposited $${amt.toLocaleString()} into ${vault.name}`, vault.id==="cyusd"?CONTRACTS.cyusd.etherscan:CONTRACTS.vault.etherscan);
   }
 
   return(
@@ -891,9 +897,9 @@ function DistributionLayer({tbill}){
 
             {/* Fixed footer buttons */}
             <div style={{padding:"10px 22px",background:"rgba(74,142,219,0.06)",borderTop:"1px solid rgba(74,142,219,0.15)"}}>
-              <div style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,marginBottom:3}}>⛓ ON-CHAIN ARCHITECTURE · SEPOLIA TESTNET</div>
-              <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginBottom:4}}>In production this deposit triggers a real on-chain transaction via the ClearYieldVault smart contract.</div>
-              <a href={CONTRACTS.vault.etherscan} target="_blank" rel="noopener noreferrer" style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,textDecoration:"none"}}>View ClearYieldVault on Etherscan ↗</a>
+              <div style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,marginBottom:3}}>⛓ TWO CONTRACTS DEPLOYED · SEPOLIA TESTNET</div>
+              <div style={{fontFamily:F.mono,fontSize:9,color:"#6B7A99",marginBottom:4}}>CY-USD: CYUSDToken (issuer-direct, SG/ASEAN). CY-USDC: ClearYieldVault (wrapper, all jurisdictions).</div>
+              <a href={depositTarget?.id==="cyusd"?CONTRACTS.cyusd.etherscan:CONTRACTS.vault.etherscan} target="_blank" rel="noopener noreferrer" style={{fontFamily:F.mono,fontSize:9,color:"#4A8EDB",fontWeight:700,textDecoration:"none"}}>View on Etherscan ↗</a>
             </div>
             <div style={{padding:"14px 22px",borderTop:"1px solid rgba(255,255,255,0.07)",display:"flex",gap:9,flexShrink:0}}>
               <Btn variant="ghost" onClick={()=>setDT(null)} full>Cancel</Btn>
